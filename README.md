@@ -21,4 +21,4 @@ sudo apt install libcurl4-openssl-dev libjansson-dev
 1. Create a [GitHub personal access token](https://github.com/settings/tokens), with "Create gists" scope
 2. Create a `token` file containing the personal access token (without spaces or newlines)
 3. Build: `gcc -o main main.c -lcurl -ljansson`
-4. Invoke: `./main sample-files/hello.js`
+4. Invoke: `./main hello.js`

@@ -13,7 +13,6 @@ struct curl_slist *prepare_headers(char *content_length, char *authorization)
 {
 	struct curl_slist *chunk = NULL;
 
-	chunk = curl_slist_append(chunk, "Host: gist.github.com");
 	chunk = curl_slist_append(chunk, "Accept: application/vnd.github.v3+json");
 	chunk = curl_slist_append(chunk, "Content-Type: application/json");
 	chunk = curl_slist_append(chunk, content_length);
@@ -40,12 +39,12 @@ char *read_file(FILE *fd)
 	return file_content;
 }
 
-char *read_files(char **files, int num_files)
+json_t *read_files(char **files, int num_files)
 {
 	FILE *fd;
 	char *file_content;
 	int file_len;
-	json_t *obj, *str;
+	json_t *obj, *content_obj, *str;
 
 	obj = json_object();
 
@@ -55,13 +54,39 @@ char *read_files(char **files, int num_files)
 		fd = fopen(filename, "r");
 		file_content = read_file(fd);
 		str = json_string(file_content);
+		content_obj = json_object();
+		json_object_set(content_obj, "content", str);
 		file_content[file_len] = '\0';
-		json_object_set(obj, filename, str);
+		json_object_set(obj, filename, content_obj);
 		json_decref(str);
+		json_decref(content_obj);
 		fclose(fd);
 		free(file_content);
 	}
-	return json_dumps(obj, 0);
+	return obj;
+}
+
+char *prepare_payload(char *desc, int pub, json_t *files)
+{
+	json_t *description;
+	json_t *public;
+	json_t *payload;
+
+	payload = json_object();
+	description = json_string(desc);
+public
+	= json_boolean(pub);
+
+	json_object_set(payload, "public", public);
+	json_decref(public);
+
+	json_object_set(payload, "description", description);
+	json_decref(description);
+
+	json_object_set(payload, "files", files);
+	json_decref(files);
+
+	return json_dumps(payload, 0);
 }
 
 int main(int argc, char **argv)
@@ -69,6 +94,7 @@ int main(int argc, char **argv)
 	CURL *curl;
 	CURLcode res;
 	struct curl_slist *headers = NULL;
+	json_t *files_json;
 	char *payload;
 	char **files = argv + 1;
 	int num_files = argc - 1;
@@ -87,7 +113,9 @@ int main(int argc, char **argv)
 
 	printf("#1\n");
 
-	payload = read_files(files, num_files);
+	files_json = read_files(files, num_files);
+	payload = prepare_payload("Sample Gist", 1, files_json);
+
 	// should check that file exists and is 40-char long
 	fdtok = fopen("token", "r");
 	token = read_file(fdtok);
@@ -113,17 +141,18 @@ int main(int argc, char **argv)
 
 	headers = prepare_headers(content_length, authorization);
 
-	// curl_easy_setopt(curl, CURLOPT_URL, "https://api.github.com/gists");
-	// curl_easy_setopt(curl, CURLOPT_POSTFIELDS, payload);
-	// curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-	// curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
-	// res = curl_easy_perform(curl);
-	// if (res != CURLE_OK)
-	// 	fprintf(stderr, "curl_easy_perform() failed: %s\n",
-	// 			curl_easy_strerror(res));
+	curl_easy_setopt(curl, CURLOPT_URL, "https://api.github.com/gists");
+	curl_easy_setopt(curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
+	curl_easy_setopt(curl, CURLOPT_POSTFIELDS, payload);
+	curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+	curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+	res = curl_easy_perform(curl);
+	if (res != CURLE_OK)
+		fprintf(stderr, "curl_easy_perform() failed: %s\n",
+				curl_easy_strerror(res));
 
-	// curl_easy_cleanup(curl);
-	// curl_global_cleanup();
+	curl_easy_cleanup(curl);
+	curl_global_cleanup();
 
 	free(token);
 	free(authorization);
