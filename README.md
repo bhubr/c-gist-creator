@@ -1,10 +1,18 @@
 # C Gist Creator
 
-**WIP**
+## What is it?
 
-Create a Gist from command-line.
+A little CLI tool allowing you to create a Gist from command-line, from local files.
 
-Written in C with [libcurl](https://curl.se/libcurl/) and [jansson](https://jansson.readthedocs.io/en/latest/tutorial.html)
+It is written in C with [libcurl](https://curl.se/libcurl/) and [jansson](https://jansson.readthedocs.io/en/latest/tutorial.html).
+
+## Status
+
+This is **Work In Progress**. Basic stuff works, but there's still room for improvement:
+
+* [ ] Parse args, so as to set `public` and `description` in POST request to GitHub API's `/gists` endpoint
+* [ ] Better error handling
+* [ ] Cross-OS build (only targets Linux as of now)
 
 ## Pre-requisites
 
