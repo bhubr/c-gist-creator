@@ -69,16 +69,15 @@ json_t *read_files(char **files, int num_files)
 char *prepare_payload(char *desc, int pub, json_t *files)
 {
 	json_t *description;
-	json_t *public;
+	json_t *is_public;
 	json_t *payload;
 
 	payload = json_object();
 	description = json_string(desc);
-public
-	= json_boolean(pub);
+	is_public = json_boolean(pub);
 
-	json_object_set(payload, "public", public);
-	json_decref(public);
+	json_object_set(payload, "public", is_public);
+	json_decref(is_public);
 
 	json_object_set(payload, "description", description);
 	json_decref(description);
@@ -149,7 +148,7 @@ int main(int argc, char **argv)
 	res = curl_easy_perform(curl);
 	if (res != CURLE_OK)
 		fprintf(stderr, "curl_easy_perform() failed: %s\n",
-				curl_easy_strerror(res));
+						curl_easy_strerror(res));
 
 	curl_easy_cleanup(curl);
 	curl_global_cleanup();
